@@ -1,0 +1,54 @@
+.admixtureBar {
+    stroke-width: 0.5;
+    stroke: black;
+    stroke-opacity: 0.5;
+}
+
+.proportionBar {
+    stroke-width: 0.5;
+    stroke: black;
+    stroke-opacity: 0.5;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: left;
+    max-width: 300px;
+    padding: 8px;
+    font-size: 4px;
+    font-family: 'Courgette', sans-serif;
+    background: #F0F0F0;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+div.info {
+    position: absolute;
+    text-align: center;
+    padding: 8px;
+    font-size: 4px;
+    font-family: 'Courgette', sans-serif;
+    background: white;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.selectText {
+    text-anchor: middle;
+    font-size: 8px;
+    font-family: 'Courgette', sans-serif;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+.thumbnail {
+    background-color: black;
+    width: 70px;
+    height: 70px;
+    display: inline-block; /* makes it fit in like an <img> */
+    background-size: cover; /* or contain */
+    background-position: center center;
+    background-repeat: no-repeat;
+}
