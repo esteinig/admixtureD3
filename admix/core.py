@@ -1,11 +1,12 @@
+import os
+import re
+import json
+import shutil
 import pandas
 import wikipedia
-import os
-import shutil
-from wikipedia import PageError, RedirectError, HTTPTimeoutError, DisambiguationError
-import json
 
-import re
+from wikipedia import PageError, RedirectError, HTTPTimeoutError, DisambiguationError
+
 from numpy import nan
 from pycountry import countries
 from pygeocoder import Geocoder, GeocoderError
@@ -199,7 +200,7 @@ class MetaData:
             i += 1
 
         self.geo_df = pandas.DataFrame([geo[entry] for entry in self.meta[column]],
-                                        columns=["Country", "City", "ISO3", "Latitude", "Longitude"])
+                                        columns=["country", "city", "iso3", "latitude", "longitude"])
 
     def get_wikipedia(self, column):
 
@@ -243,7 +244,7 @@ class MetaData:
 
         stamp("Getting geo data from string:", geo_string)
 
-        entry = {"Country": None, "City": None, "ISO3": None, "Latitude": None, "Longitude": None}
+        entry = {"country": None, "city": None, "iso3": None, "latitude": None, "longitude": None}
 
         if geo_string is None:
             return entry
@@ -277,4 +278,4 @@ class MetaData:
         else:
             city = results.city
 
-        return {"Country": name, "City": city, "ISO3": iso, "Latitude": lat, "Longitude": lon}
+        return {"country": name, "city": city, "iso3": iso, "latitude": lat, "longitude": lon}

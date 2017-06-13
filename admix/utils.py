@@ -65,5 +65,5 @@ class CommandLine:
 
         parser.add_argument('--config', type=lambda p: os.path.abspath(p), default=None)
 
-        self.args = parser.parse_args(["-m", "test/meta.csv", "-q",  "./test/*.Q", "--palette", "Pastel1",
+        self.args = parser.parse_args(["-m", "test/meta.csv", "-q",  "./test/*.Q", "--palette", "Pastel1"   ,
                                        "--geo"])

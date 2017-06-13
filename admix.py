@@ -1,5 +1,6 @@
-from glob import glob
 import os
+
+from glob import glob
 from admix.core import MetaData, AdmixtureD3
 from admix.utils import stamp, CommandLine
 
