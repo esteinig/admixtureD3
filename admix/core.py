@@ -15,11 +15,11 @@ from admix.utils import wikihtml, stamp
 
 class AdmixtureD3:
 
-    def __init__(self, qfiles, meta, project ="AdmixtureD3", palette="Dark2", colours=None, config=None,
+    def __init__(self, qfiles, meta, project="AdmixtureD3", palette="Dark2", colours=None, config=None,
                  outdir=os.getcwd(), force=True):
 
         self.project = project
-        self.outdir = outdir
+        self.outdir = os.path.join(outdir, project)
         self.force = force
 
         self.meta = meta
@@ -40,30 +40,29 @@ class AdmixtureD3:
 
         self.data = dict()
 
-        self.wiki_data = dict()
-        self.geo_data = dict()
-
         self.project_files = {
             "css": [
-                self._get_basefile("main.css")
+                self._get_basefile("main.css", "css")
             ],
             "js": [
-                self._get_basefile("helper.js"),
-                self._get_basefile("main.js")
+                self._get_basefile("helper.js", "js"),
+                self._get_basefile("main.js", "js")
             ]
         }
 
-    def _get_basefile(self, file):
+    def _get_basefile(self, file, sub_dir=None):
 
-        return os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+        if sub_dir is not None:
+            return os.path.join(os.path.dirname(os.path.abspath(__file__)), sub_dir, file)
+        else:
+            return os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
 
     def _setup_project(self):
 
         os.makedirs(self.outdir, exist_ok=True)
 
-        os.makedirs(self.outdir)
         for sub_dir in ("css", "js"):
-            os.makedirs(sub_dir)
+            os.makedirs(os.path.join(self.outdir, sub_dir), exist_ok=True)
 
     def _get_q_data(self):
 
@@ -100,7 +99,7 @@ class AdmixtureD3:
                 }
             }
 
-        for i, entry in self.meta.iterrow():
+        for i, entry in self.meta.iterrows():
 
             sample = {
                 "id": entry["id"],
@@ -112,7 +111,7 @@ class AdmixtureD3:
                 },
                 "geo": None,
                 "pop": entry["pop"],
-                "K": {K: self.q_values[K] for K in self.k_values}
+                "K": {K: self.q_values[K][entry["id"]] for K in self.k_values}
 
             }
 
@@ -142,26 +141,28 @@ class AdmixtureD3:
 
         # Generates data for Admixture D3
 
-        if wiki is None:
+        self._transform()
+
+        if wiki is not None:
             for sample in self.data["samples"]:
                 sample["info"] = wiki[sample["id"]]
 
         if geo is not None:
             # add geographic data here
             for sample in self.data["samples"]:
-                sample["info"] = geo[sample["id"]]
+                sample["geo"] = geo[sample["id"]]
 
         file_path = os.path.join(self.outdir, "data.json")
 
         with open(file_path, "w") as data_file:
-            json.dumps(data_file)
+            json.dump(self.data, data_file, indent=4)
 
         for target_dir, files in self.project_files.items():
             for file in files:
-                shutil.copy(target_dir, file)
+                shutil.copy(file, os.path.join(self.outdir, target_dir, os.path.basename(file)))
 
         shutil.copy(self._get_basefile("main.html"),
-                    os.path.join(self.outdir, self.project + "html"))
+                    os.path.join(self.outdir, self.project + ".html"))
         
 
 class MetaData:
@@ -177,25 +178,47 @@ class MetaData:
         self.geo_df = None
         self.wiki_df = None
 
+        self.wiki_data = None
+        self.geo_data = None
+
         # Wikipedia dictionary of Title, Text and URL for Admixture D3
         self.wiki = None
 
     def get_locations(self, column):
 
         geo = {field: self._get_geo_row(field) for field in self.meta[column].unique()}
-        self.geo_data = {self.meta.loc[i, "ID"]: self.wiki[entry] for i, entry in enumerate(self.meta[column])}
+
+        summary_column = []
+        for entry in self.meta[column]:
+            summary_column.append(geo[entry])
+
+        self.geo_data = {}
+        i = 0
+        for sample_id in self.meta["id"]:
+            self.geo_data[sample_id] = summary_column[i]
+            i += 1
+
         self.geo_df = pandas.DataFrame([geo[entry] for entry in self.meta[column]],
                                         columns=["Country", "City", "ISO3", "Latitude", "Longitude"])
 
     def get_wikipedia(self, column):
 
         wiki = {field: self._get_wikipedia_summary(field) for field in self.meta[column].unique()}
-        self.wiki_data = {self.meta.loc[i, "ID"]: wiki[entry] for i, entry in enumerate(self.meta[column])}
 
-        self.wiki_df = pandas.DataFrame([self.wiki[entry]["text"] for entry in self.meta[column]])
+        summary_column = []
+        for entry in self.meta[column]:
+            summary_column.append(wiki[entry])
+
+        self.wiki_data = {}
+        i = 0
+        for sample_id in self.meta["id"]:
+            self.wiki_data[sample_id] = summary_column[i]
+            i += 1
 
     @wikihtml
     def _get_wikipedia_summary(self, search_string):
+
+        stamp("Getting Wikipedia summary for entry:", search_string)
 
         try:
             summary = wikipedia.summary(search_string)
@@ -206,21 +229,23 @@ class MetaData:
             return title, summary, url
 
         except (PageError, RedirectError):
-            print("Could not find Wikipedia entry for:", search_string)
+            stamp("Could not find Wikipedia entry for:", search_string)
             return nan, nan, nan
         except HTTPTimeoutError:
-            print("Could not reach Wikipedia")
+            stamp("Could not reach Wikipedia")
             return nan, nan, nan
         except DisambiguationError:
-            print("Disambigous search results for:", search_string)
+            stamp("Disambigous search results for:", search_string)
             return nan, nan, nan
 
     @staticmethod
     def _get_geo_row(geo_string, clean=None):
 
-        entry = {"Country": nan, "City": nan, "ISO3": nan, "Latitude": nan, "Longitude": nan}
+        stamp("Getting geo data from string:", geo_string)
 
-        if geo_string is nan:
+        entry = {"Country": None, "City": None, "ISO3": None, "Latitude": None, "Longitude": None}
+
+        if geo_string is None:
             return entry
 
         if clean is not None:
@@ -248,7 +273,7 @@ class MetaData:
         lon = float(results.longitude)
 
         if results.city is None:
-            city = nan
+            city = None
         else:
             city = results.city
 

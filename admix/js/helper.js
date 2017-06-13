@@ -51,9 +51,9 @@ let attach_infobox = function(meta){
 
             text = '<div class=thumbnail style="background-image: url(' + meta[i].image + ');"></div>';
 
-            text += "<h1>" + meta[i].info.title + "</h1><br><br>"
+            text += "<h1>" + meta[i].info.title + "</h1><br>"
         } else{
-            text = "<h1>" + meta[i].info.title + "</h1><br><br>";
+            text = "<h1>" + meta[i].info.title + "</h1><br>";
         }
 
         text += meta[i].info.text + "<br>";

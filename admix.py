@@ -35,8 +35,9 @@ def main():
         else:
             stamp("Could not find column for geographical information. Exiting...")
             exit(1)
-    
-    adm = AdmixtureD3(project=args["project"], qfiles=q_files, meta=md.meta, config=args["config"])
+
+    adm = AdmixtureD3(project=args["project"], qfiles=q_files, meta=md.meta, config=args["config"],
+                      palette=args["palette"], colours=args["colours"])
 
     adm.write_project(wiki=md.wiki_data, geo=md.geo_data)
 

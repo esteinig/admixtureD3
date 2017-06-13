@@ -51,7 +51,7 @@ class CommandLine:
 
         parser = argparse.ArgumentParser(description='Command line interface for Admixture D3')
 
-        parser.add_argument('-m', '--meta', type=lambda p: os.path.abspath(p), default="./test/meta.csv")
+        parser.add_argument('-m', '--meta', type=lambda p: os.path.abspath(p), default="meta.csv")
         parser.add_argument('-q', '--admixture', nargs="*")
 
         parser.add_argument('-p', '--project', type=str, default="AdmixtureD3")
@@ -65,4 +65,5 @@ class CommandLine:
 
         parser.add_argument('--config', type=lambda p: os.path.abspath(p), default=None)
 
-        self.args = parser.parse_args(["-m", "meta.csv", "-q",  "./test_dir/*.Q", "--palette", "Pastel1"])
+        self.args = parser.parse_args(["-m", "test/meta.csv", "-q",  "./test/*.Q", "--palette", "Pastel1",
+                                       "--geo"])
